@@ -2,146 +2,175 @@ package lab.web;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Сервлет для отображения списка книг читателя.
- *
- * <p>Параметр инициализации libraryName задаёт название библиотеки.
- * Динамический параметр name задаёт имя читателя,
- * а status определяет фильтр по состоянию чтения.</p>
- *
- * @author Иван Тишко
+ * Отображает список книг и форму на русском или английском языке.
+ * Язык задаётся параметром lang, имя — name, фильтр — status.
  */
 public class BooksList extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    /** Название библиотеки из параметров инициализации. */
-    private String libraryName;
-
     /**
-     * Инициализирует сервлет и считывает название библиотеки.
+     * Формирует локализованную страницу.
      *
-     * @throws ServletException если произошла ошибка инициализации
-     */
-    @Override
-    public void init() throws ServletException {
-        libraryName = getServletConfig()
-                .getInitParameter("libraryName");
-
-        if (libraryName == null || libraryName.isBlank()) {
-            libraryName = "Учебная библиотека";
-        }
-    }
-
-    /**
-     * Формирует HTML-страницу со списком книг.
-     *
-     * @param request HTTP-запрос с параметрами name и status
-     * @param response HTTP-ответ с HTML-страницей
-     * @throws IOException если произошла ошибка записи ответа
+     * @param request запрос пользователя
+     * @param response ответ сервера
+     * @throws IOException при ошибке вывода
      */
     protected void processRequest(
             HttpServletRequest request,
             HttpServletResponse response
     ) throws IOException {
 
-        // Кодировка задаётся до чтения параметров.
         request.setCharacterEncoding("UTF-8");
+
+        String lang = request.getParameter("lang");
+
+        if (lang == null
+                || (!"ru".equalsIgnoreCase(lang)
+                && !"en".equalsIgnoreCase(lang))) {
+            response.sendError(
+                    HttpServletResponse.SC_NOT_ACCEPTABLE,
+                    "Expected lang=ru or lang=en"
+            );
+            return;
+        }
+
+        lang = lang.toLowerCase(Locale.ROOT);
+
+        Locale locale = "en".equals(lang)
+                ? Locale.ENGLISH
+                : Locale.forLanguageTag("ru");
+
+        ResourceBundle res = ResourceBundle.getBundle("Book", locale);
+
+        response.setLocale(locale);
         response.setContentType("text/html;charset=UTF-8");
 
         String name = request.getParameter("name");
-        String status = request.getParameter("status");
+        name = name == null ? "" : name.trim();
 
-        if (name == null || name.isBlank()) {
-            name = "без имени";
-        } else {
-            name = name.trim();
-        }
+        String reader = name.isEmpty()
+                ? res.getString("unnamed")
+                : name;
+
+        String status = request.getParameter("status");
 
         if (!"read".equals(status) && !"unread".equals(status)) {
             status = "all";
         }
 
-        String filterTitle = switch (status) {
-            case "read" -> "Прочитанные";
-            case "unread" -> "Непрочитанные";
-            default -> "Все книги";
-        };
-
-        // Автор, название, признак прочтения.
-        String[][] books = {
-                {"Михаил Булгаков", "Мастер и Маргарита", "read"},
-                {"Виктор Пелевин", "Чапаев и Пустота", "unread"},
-                {"Лев Толстой", "Война и мир", "read"},
-                {"Фёдор Достоевский", "Идиот", "unread"}
-        };
-
+        String action = request.getContextPath() + "/BooksList";
+        boolean[] readFlags = {true, false, true, false};
+        response.setLocale(locale);
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             out.println("<!DOCTYPE html>");
-            out.println("<html lang='ru'>");
-            out.println("<head>");
-            out.println("<meta charset='UTF-8'>");
-            out.println("<title>Список книг</title>");
-            out.println("</head>");
-            out.println("<body>");
+            out.println("<html lang='" + lang + "'>");
+            out.println("<head><meta charset='UTF-8'>");
+            out.println("<title>" + text(res, "title") + "</title>");
+            out.println("</head><body>");
 
-            out.println("<h1>" + escapeHtml(libraryName) + "</h1>");
-            out.println("<h2>Список книг читателя "
-                    + escapeHtml(name) + "</h2>");
+            out.println("<h1>" + text(res, "library") + "</h1>");
+            out.println("<h2>" + text(res, "title") + "</h2>");
 
-            out.println("<p>Фильтр: " + filterTitle + "</p>");
-            out.println("<p>Метод запроса: "
+            out.println("<form action='" + escapeHtml(action)
+                    + "' method='get' accept-charset='UTF-8'>");
+
+            out.println("<p><label for='name'>"
+                    + text(res, "name") + ":</label> ");
+            out.println("<input id='name' name='name' value='"
+                    + escapeHtml(name) + "'></p>");
+
+            out.println("<p><label for='lang'>"
+                    + text(res, "language") + ":</label> ");
+            out.println("<select id='lang' name='lang'>");
+
+            out.println("<option value='ru'"
+                    + ("ru".equals(lang) ? " selected" : "")
+                    + ">Русский</option>");
+
+            out.println("<option value='en'"
+                    + ("en".equals(lang) ? " selected" : "")
+                    + ">English</option>");
+
+            out.println("</select></p>");
+
+            out.println("<p><label for='status'>"
+                    + text(res, "filter") + ":</label> ");
+            out.println("<select id='status' name='status'>");
+
+            for (String value : new String[]{"all", "read", "unread"}) {
+                out.println("<option value='" + value + "'"
+                        + (value.equals(status) ? " selected" : "")
+                        + ">" + text(res, value) + "</option>");
+            }
+
+            out.println("</select></p>");
+
+            out.println("<button type='submit'>"
+                    + text(res, "submit") + " — GET</button>");
+
+            out.println("<button type='submit' formmethod='post'>"
+                    + text(res, "submit") + " — POST</button>");
+
+            out.println("</form>");
+
+            out.println("<h3>" + text(res, "reader") + ": "
+                    + escapeHtml(reader) + "</h3>");
+
+            out.println("<p>" + text(res, "method") + ": "
                     + escapeHtml(request.getMethod()) + "</p>");
 
             out.println("<table border='1' cellpadding='8'>");
-            out.println("<tr>"
-                    + "<th>Автор</th>"
-                    + "<th>Название книги</th>"
-                    + "<th>Прочитал</th>"
-                    + "</tr>");
+            out.println("<tr><th>" + text(res, "author")
+                    + "</th><th>" + text(res, "book.title")
+                    + "</th><th>" + text(res, "book.read")
+                    + "</th></tr>");
 
             int count = 0;
 
-            for (String[] book : books) {
-                if (!"all".equals(status) && !status.equals(book[2])) {
+            for (int i = 0; i < readFlags.length; i++) {
+                boolean isRead = readFlags[i];
+
+                if ("read".equals(status) && !isRead
+                        || "unread".equals(status) && isRead) {
                     continue;
                 }
 
-                out.println("<tr>");
-                out.println("<td>" + escapeHtml(book[0]) + "</td>");
-                out.println("<td>" + escapeHtml(book[1]) + "</td>");
-                out.println("<td>"
-                        + ("read".equals(book[2]) ? "Да" : "Нет")
-                        + "</td>");
-                out.println("</tr>");
+                String prefix = "book." + (i + 1);
+
+                out.println("<tr><td>"
+                        + text(res, prefix + ".author")
+                        + "</td><td>"
+                        + text(res, prefix + ".title")
+                        + "</td><td>"
+                        + text(res, isRead ? "yes" : "no")
+                        + "</td></tr>");
 
                 count++;
             }
 
             out.println("</table>");
-            out.println("<p>Найдено книг: " + count + "</p>");
-
-            String backUrl = request.getContextPath() + "/index.html";
-            out.println("<p><a href='" + escapeHtml(backUrl)
-                    + "'>Вернуться к форме</a></p>");
-
-            out.println("</body>");
-            out.println("</html>");
+            out.println("<p>" + text(res, "count") + ": " + count + "</p>");
+            out.println("</body></html>");
         }
     }
 
     /**
      * Обрабатывает GET-запрос.
      *
-     * @param request HTTP-запрос
-     * @param response HTTP-ответ
-     * @throws IOException если произошла ошибка записи ответа
+     * @param request запрос пользователя
+     * @param response ответ сервера
+     * @throws IOException при ошибке вывода
      */
     @Override
     protected void doGet(
@@ -154,9 +183,9 @@ public class BooksList extends HttpServlet {
     /**
      * Обрабатывает POST-запрос.
      *
-     * @param request HTTP-запрос
-     * @param response HTTP-ответ
-     * @throws IOException если произошла ошибка записи ответа
+     * @param request запрос пользователя
+     * @param response ответ сервера
+     * @throws IOException при ошибке вывода
      */
     @Override
     protected void doPost(
@@ -166,12 +195,10 @@ public class BooksList extends HttpServlet {
         processRequest(request, response);
     }
 
-    /**
-     * Экранирует специальные символы для безопасного вывода в HTML.
-     *
-     * @param value исходная строка
-     * @return строка с экранированными символами
-     */
+    private static String text(ResourceBundle res, String key) {
+        return escapeHtml(res.getString(key));
+    }
+
     private static String escapeHtml(String value) {
         return value.replace("&", "&amp;")
                 .replace("<", "&lt;")
