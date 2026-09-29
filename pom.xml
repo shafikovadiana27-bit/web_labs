@@ -12,7 +12,7 @@
     <groupId>org.example</groupId>
 
     <!-- Имя проекта -->
-    <artifactId>web_laba06</artifactId>
+    <artifactId>web_laba07</artifactId>
 
     <!-- Версия проекта -->
     <version>1.0-SNAPSHOT</version>
@@ -68,7 +68,7 @@
             После выполнения Maven install будет создан файл:
             web_laba01.war
         -->
-        <finalName>web_laba06</finalName>
+        <finalName>web_laba07</finalName>
 
         <plugins>
 
