@@ -2,37 +2,12 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Библиотека — список книг</title>
+    <title>Выбор языка / Select language</title>
 </head>
 <body>
-<h1>Список книг читателя</h1>
+<h1>Выберите язык / Select language</h1>
 
-<form action="BooksList" method="get" accept-charset="UTF-8">
-    <p>
-        <label for="name">Имя читателя:</label>
-        <input
-                type="text"
-                id="name"
-                name="name"
-                placeholder="Например, Иван"
-        >
-    </p>
-
-    <p>
-        <label for="status">Какие книги показать:</label>
-
-        <select id="status" name="status">
-            <option value="all">Все книги</option>
-            <option value="read">Прочитанные</option>
-            <option value="unread">Непрочитанные</option>
-        </select>
-    </p>
-
-    <button type="submit">Показать книги — GET</button>
-
-    <button type="submit" formmethod="post">
-        Показать книги — POST
-    </button>
-</form>
+<p><a href="BooksList?lang=ru">Русский</a></p>
+<p><a href="BooksList?lang=en">English</a></p>
 </body>
 </html>
