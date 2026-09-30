@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module rename-to="bookmodule">
+
+    <inherits name="com.google.gwt.user.User"/>
+
+    <source path="client"/>
+
+    <entry-point class="lab.web.client.BookModule"/>
+
+    <set-property name="user.agent" value="safari"/>
+
+</module>

@@ -1,56 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <!-- Версия модели POM, используемой Maven -->
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Идентификатор группы проекта -->
     <groupId>org.example</groupId>
-
-    <!-- Имя проекта -->
-    <artifactId>web_laba07</artifactId>
-
-    <!-- Версия проекта -->
+    <artifactId>web_laba08</artifactId>
     <version>1.0-SNAPSHOT</version>
-
-    <!--
-        Тип собираемого проекта.
-        Значение war означает, что результатом сборки
-        будет WAR-архив для развертывания на веб-сервере Tomcat.
-    -->
     <packaging>war</packaging>
 
     <properties>
-        <!-- Версия Java, используемая при компиляции проекта -->
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-
-        <!-- Кодировка исходных файлов проекта -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <gwt.version>2.10.0</gwt.version>
     </properties>
 
-
-    <!-- Зависимости проекта -->
     <dependencies>
-
-        <!--
-            JUnit используется для написания и выполнения
-            модульных тестов Java-приложения.
-
-            scope=test означает, что данная библиотека
-            используется только во время тестирования
-            и не попадает в итоговый WAR-файл.
-        -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.2</version>
-            <scope>test</scope>
+            <groupId>org.gwtproject</groupId>
+            <artifactId>gwt-user</artifactId>
+            <version>${gwt.version}</version>
+            <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.gwtproject</groupId>
+            <artifactId>gwt-dev</artifactId>
+            <version>${gwt.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.gwtproject</groupId>
+            <artifactId>gwt-servlet</artifactId>
+            <version>${gwt.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
@@ -58,136 +46,66 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
-    <!-- Настройка процесса сборки проекта -->
     <build>
-
-        <!--
-            Имя итогового WAR-файла.
-            После выполнения Maven install будет создан файл:
-            web_laba01.war
-        -->
-        <finalName>web_laba07</finalName>
+        <finalName>web_laba08</finalName>
 
         <plugins>
-
-            <!--
-                Maven Clean Plugin.
-
-                Выполняет фазу clean.
-                Удаляет каталог target и результаты
-                предыдущих сборок проекта.
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-clean-plugin</artifactId>
-                <version>3.3.2</version>
-            </plugin>
-
-
-            <!--
-                Maven Resources Plugin.
-
-                Отвечает за копирование ресурсов проекта
-                в каталог сборки.
-
-                К ресурсам относятся конфигурационные файлы,
-                изображения и другие файлы, которые должны
-                попасть в итоговое приложение.
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.1</version>
-            </plugin>
-
-
-            <!--
-                Maven Compiler Plugin.
-
-                Выполняет компиляцию исходного Java-кода.
-                Проект компилируется с использованием Java 17.
-            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>gwt-maven-plugin</artifactId>
+                <version>2.10.0</version>
+
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
 
                 <configuration>
-                    <source>17</source>
-                    <target>17</target>
+                    <module>lab.web.BookModule</module>
+                    <sourceLevel>1.8</sourceLevel>
+                    <localWorkers>2</localWorkers>
+                    <extraJvmArgs>-Xmx1024m</extraJvmArgs>
+                    <failOnError>true</failOnError>
+                    <webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
                 </configuration>
             </plugin>
 
-            <!--
-                Maven Surefire Plugin.
-
-                Запускает модульные тесты проекта
-                во время фазы test жизненного цикла Maven.
-
-                Например, данный плагин запускает тесты,
-                написанные с использованием JUnit.
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.5</version>
-            </plugin>
-
-
-            <!--
-                Maven WAR Plugin.
-
-                Формирует итоговый WAR-архив веб-приложения,
-                который затем можно развернуть на сервере Tomcat.
-            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.4.0</version>
-
-                <configuration>
-                    <!--
-                        web.xml не является обязательным,
-                        поэтому сборка не завершится ошибкой,
-                        если данного файла нет.
-                    -->
-                    <failOnMissingWebXml>false</failOnMissingWebXml>
-                </configuration>
             </plugin>
-            <!-- Генерация документации Java -->
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.2</version>
+                <version>3.6.3</version>
 
                 <configuration>
                     <encoding>UTF-8</encoding>
                     <docencoding>UTF-8</docencoding>
                     <charset>UTF-8</charset>
-                    <reportOutputDirectory>
-                        ${project.build.directory}/site
-                    </reportOutputDirectory>
+                    <show>public</show>
                 </configuration>
             </plugin>
-
-
-            <!--
-                Maven Install Plugin.
-
-                Выполняет фазу install.
-                После успешной сборки помещает созданный
-                артефакт проекта в локальный Maven-репозиторий.
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>3.1.2</version>
-            </plugin>
-
         </plugins>
-
     </build>
-
 </project>
